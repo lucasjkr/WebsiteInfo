@@ -1,1 +1,4 @@
-.idea/
+.idea/*
+input.txt
+*.xlsx
+.DS_Store

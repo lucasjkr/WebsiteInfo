@@ -1,7 +1,11 @@
+#!/usr/bin/python3
+
 import requests, json
 from requests.packages.urllib3.exceptions import InsecureRequestWarning
 from openpyxl import Workbook
 import bs4
+from urllib.parse import urlparse
+import socket
 
 requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
@@ -16,14 +20,17 @@ class WebChain:
         # dictionary to insert current query results into
         data = {}
         data['request_url'] = url
+        data['request_ip'] = str("")
         data['status_code'] = str("")
         data['title'] = str("")
         data['final_url'] = str("")
+        data['final_ip'] = str("")
         data['chain'] = list()
 
         # if supplied url starts with http, request the URL as is
         if url.startswith('http'):
-            response = requests.get(url, allow_redirects=True, verify=False, timeout=1, headers=self.headers)
+            url_target = url
+            response = requests.get(url_target, allow_redirects=True, verify=False, timeout=1, headers=self.headers)
         else:
             # otherwise, request that url with HTTPS and if that fails, with HTTP
             try:
@@ -38,6 +45,13 @@ class WebChain:
                     data['status_code'] = 0
                     data['chain'] = ""
                     return data
+
+        # extract fqdn from requested and final URLs, excluding port number
+        request_fqdn = urlparse(url_target).netloc.split(':')[0]
+        final_fqdn = urlparse(response.url).netloc.split(':')[0]
+
+        data['request_ip'] = socket.gethostbyname(request_fqdn)
+        data['final_ip'] = socket.gethostbyname(final_fqdn)
 
         data['status_code'] = response.status_code
 
