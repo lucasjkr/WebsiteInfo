@@ -23,6 +23,8 @@ class WebChain:
         data['request_ip'] = str("")
         data['status_code'] = str("")
         data['title'] = str("")
+        data['server_initial'] = str("")
+        data['server_final'] = str("")
         data['final_url'] = str("")
         data['final_ip'] = str("")
         data['chain'] = list()
@@ -58,6 +60,7 @@ class WebChain:
         # check whether HTTP response included redirects
         history = response.history
         if history:
+            data['server_initial'] = history[0].headers.get('Server')
             for resp in history:
                 # get each step in the responses redirect history
                 data['chain'].append(resp.url)
@@ -67,9 +70,12 @@ class WebChain:
             # if there were no redirects, then the response chain is just the requested URL
             data['chain'].append(response.url)
 
+        data['server_final'] = response.headers.get('Server')
+
         data['chain'] = json.dumps(data['chain'], indent=4)
         data['final_url'] = response.url
         data['title'] = self.get_page_title(response.content)
+        # print(json.dumps(dict(response.headers), indent=4))
         return data
 
     def get_page_title(self, content):
@@ -119,12 +125,16 @@ class WebChain:
     def main(self, path_to_url_file):
         # create empty list to insert all results into
         result = []
-
+        i = 0
         # open input text file and break into lines (1 URL per line)
         # Url's can just be fqdn or entire fqdn with protocol and may include an optional port number
         with open(path_to_url_file, 'r') as file:
             urls = [line.rstrip() for line in file]
             for url in urls:
+                # print which line of input you're on:
+                i = i + 1
+                print(f"\rRow: {i}", end='', flush=True)
+
                 # if URL starts with "#" then skip
                 if url.startswith('#'):
                     print(f"Skipping {url}")
