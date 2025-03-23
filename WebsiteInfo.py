@@ -6,7 +6,9 @@ from openpyxl import Workbook
 import bs4
 from urllib.parse import urlparse
 import socket
+import warnings
 
+warnings.filterwarnings("ignore", category=bs4.XMLParsedAsHTMLWarning)
 requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
 class WebChain:
@@ -82,7 +84,7 @@ class WebChain:
         soup = bs4.BeautifulSoup(content, 'html.parser')
         title = soup.find('title')
         if title:
-            return title.string
+            return title.string.strip()
         else:
             return ""
 
